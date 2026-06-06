@@ -1,7 +1,5 @@
 [agent]
 id = "prod-api-01"
-backend_url = "https://api.example.com/ingest"
-api_key = "your-api-key"
 
 [logs]
 paths = ["/var/log/syslog"]
@@ -10,4 +8,6 @@ paths = ["/var/log/syslog"]
 collect_interval_seconds = 60
 
 [shipper]
+endpoint = "https://api.example.com/ingest"
 ship_interval_seconds = 30
+api_key = "your-api-key"

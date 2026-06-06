@@ -14,8 +14,6 @@ pub struct Config {
 #[derive(Debug, Deserialize, Clone)]
 pub struct AgentConfig {
     pub id: String,
-    pub backend_url: String,
-    pub api_key: String,
 }
 
 #[derive(Debug, Deserialize, Clone)]
@@ -30,7 +28,6 @@ pub struct MetricsConfig {
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct ShipperConfig {
-    #[serde(skip, default)]
     pub endpoint: String,
     pub ship_interval_seconds: u64,
     pub api_key: Option<String>,
