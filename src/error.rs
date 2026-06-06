@@ -11,6 +11,7 @@ pub enum AppError {
     MetricsError(String),
     ShipError(String),
     BufferLockError,
+    InitError(String),
 }
 
 impl fmt::Display for AppError {
@@ -19,7 +20,7 @@ impl fmt::Display for AppError {
             AppError::ConfigNotFound => write!(
                 f,
                 "[uplog error] config: no config file found (checked ./uplog.toml, \
-                 /etc/uplog/uplog.toml)"
+                 ~/.uplog.toml, /etc/uplog/uplog.toml)"
             ),
             AppError::ConfigParseError(msg) => {
                 write!(f, "[uplog error] config: parse failed — {msg}")
@@ -40,6 +41,9 @@ impl fmt::Display for AppError {
                 f,
                 "[uplog error] buffer: failed to acquire lock on shared buffer"
             ),
+            AppError::InitError(msg) => {
+                write!(f, "[uplog error] init: {msg}")
+            }
         }
     }
 }

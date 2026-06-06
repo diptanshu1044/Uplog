@@ -26,3 +26,5 @@ tracing-subscriber = "0.3"
 
 clap = { version = "4", features = ["derive"] }
 futures = "0.3"
+
+dirs = "5"

@@ -5,6 +5,7 @@ use crate::error::AppError;
 use crate::models::Config;
 
 const LOCAL_CONFIG: &str = "./uplog.toml";
+const HOME_CONFIG_FILE: &str = ".uplog.toml";
 const SYSTEM_CONFIG: &str = "/etc/uplog/uplog.toml";
 
 pub fn load(cli_path: Option<&str>) -> Result<Config, AppError> {
@@ -25,13 +26,16 @@ pub fn load(cli_path: Option<&str>) -> Result<Config, AppError> {
     Ok(config)
 }
 
-fn resolve_config_path(cli_path: Option<&str>) -> Option<PathBuf> {
+pub fn resolve_config_path(cli_path: Option<&str>) -> Option<PathBuf> {
     let mut candidates = Vec::new();
 
     if let Some(path) = cli_path {
         candidates.push(PathBuf::from(path));
     }
     candidates.push(PathBuf::from(LOCAL_CONFIG));
+    if let Some(home) = dirs::home_dir() {
+        candidates.push(home.join(HOME_CONFIG_FILE));
+    }
     candidates.push(PathBuf::from(SYSTEM_CONFIG));
 
     candidates.into_iter().find(|path| path.exists())
