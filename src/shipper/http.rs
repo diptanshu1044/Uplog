@@ -7,6 +7,7 @@ use crate::error::AppError;
 use crate::models::{Buffer, Payload, ShipperConfig};
 
 const REQUEST_TIMEOUT_SECS: u64 = 10;
+const RETRY_DELAY_SECS: u64 = 5;
 
 pub async fn run(config: ShipperConfig, buffer: Buffer, agent_id: String) -> ! {
     let client = match Client::builder()
@@ -57,34 +58,46 @@ pub async fn run(config: ShipperConfig, buffer: Buffer, agent_id: String) -> ! {
             }
         };
 
-        // MVP: failed batches are dropped. No disk persistence or retry queue
-        // until v1.1. If the backend is down, data is lost for that interval.
-        let mut req = client
-            .post(&config.endpoint)
-            .header("Content-Type", "application/json")
-            .body(json_string);
+        let mut shipped = false;
+        for attempt in 1..=3 {
+            let mut req = client
+                .post(&config.endpoint)
+                .header("Content-Type", "application/json")
+                .body(json_string.clone());
 
-        if let Some(key) = &config.api_key {
-            req = req.header("Authorization", format!("Bearer {}", key));
+            if let Some(key) = &config.api_key {
+                req = req.header("Authorization", format!("Bearer {}", key));
+            }
+
+            match req.send().await {
+                Ok(response) if response.status().is_success() => {
+                    shipped = true;
+                    break;
+                }
+                Ok(response) => {
+                    AppError::warn(&AppError::ShipError(format!(
+                        "attempt {attempt}: POST to {} returned {}",
+                        config.endpoint,
+                        response.status()
+                    )));
+                }
+                Err(e) => {
+                    AppError::warn(&AppError::ShipError(format!(
+                        "attempt {attempt}: POST to {} failed: {e}",
+                        config.endpoint
+                    )));
+                }
+            }
+
+            if attempt < 3 {
+                tokio::time::sleep(Duration::from_secs(RETRY_DELAY_SECS)).await;
+            }
         }
 
-        let response = match req.send().await {
-            Ok(r) => r,
-            Err(e) => {
-                AppError::warn(&AppError::ShipError(format!(
-                    "POST to {} failed: {e}",
-                    config.endpoint
-                )));
-                continue;
-            }
-        };
-
-        if !response.status().is_success() {
-            AppError::warn(&AppError::ShipError(format!(
-                "POST to {} returned {}",
-                config.endpoint,
-                response.status()
-            )));
+        if !shipped {
+            AppError::warn(&AppError::ShipError(
+                "batch dropped after 3 attempts".into(),
+            ));
         }
     }
 }

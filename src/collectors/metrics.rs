@@ -34,16 +34,23 @@ pub async fn run(config: MetricsConfig, buffer: Buffer) -> ! {
         let memory_used_mb = system.used_memory() / BYTES_PER_MB;
         let memory_total_mb = system.total_memory() / BYTES_PER_MB;
 
-        let (disk_total_bytes, disk_available_bytes) =
-            disks.iter().fold((0u64, 0u64), |(total, available), disk| {
+        let (disk_used_bytes, disk_total_bytes) = disks
+            .iter()
+            .filter(|d| {
+                let mount = d.mount_point().to_string_lossy();
+                !mount.starts_with("/System/Volumes/")
+                    && !mount.starts_with("/private/var/vm")
+            })
+            .fold((0u64, 0u64), |(used, total), d| {
+                let d_total = d.total_space();
+                let d_used = d_total.saturating_sub(d.available_space());
                 (
-                    total.saturating_add(disk.total_space()),
-                    available.saturating_add(disk.available_space()),
+                    used.saturating_add(d_used),
+                    total.saturating_add(d_total),
                 )
             });
-        let disk_used_bytes = disk_total_bytes.saturating_sub(disk_available_bytes);
-        let disk_total_gb = disk_total_bytes as f64 / BYTES_PER_GB;
         let disk_used_gb = disk_used_bytes as f64 / BYTES_PER_GB;
+        let disk_total_gb = disk_total_bytes as f64 / BYTES_PER_GB;
 
         let (net_bytes_sent, net_bytes_received) =
             networks.iter().fold((0u64, 0u64), |(sent, received), (_, data)| {

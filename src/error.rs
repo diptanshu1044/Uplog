@@ -7,6 +7,7 @@ pub enum AppError {
     ConfigParseError(String),
     ConfigValidationError(String),
     LogWatchError(String),
+    #[allow(dead_code)]
     MetricsError(String),
     ShipError(String),
     BufferLockError,
@@ -51,6 +52,7 @@ impl AppError {
         process::exit(1);
     }
 
+    #[allow(dead_code)]
     pub fn exit_ref(e: &AppError) -> ! {
         eprintln!("{e}");
         process::exit(1);
