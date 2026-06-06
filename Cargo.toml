@@ -11,7 +11,7 @@ chrono = { version = "0.4", features = ["serde"] }
 
 tokio = { version = "1", features = ["full"] }
 
-reqwest = { version = "0.12", features = ["json"] }
+reqwest = { version = "0.12", default-features = false, features = ["rustls-tls", "json"] }
 
 sysinfo = "0.37"
 
@@ -28,3 +28,9 @@ clap = { version = "4", features = ["derive"] }
 futures = "0.3"
 
 dirs = "5"
+
+[profile.release]
+strip = true
+opt-level = "z"
+codegen-units = 1
+lto = true
