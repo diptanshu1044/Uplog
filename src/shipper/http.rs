@@ -14,9 +14,7 @@ pub async fn run(config: ShipperConfig, buffer: Buffer, agent_id: String) -> ! {
         .build()
     {
         Ok(c) => c,
-        Err(e) => AppError::exit(&AppError::ShipError(
-          format!("failed to build HTTP client: {e}")
-        )),
+        Err(e) => AppError::ShipError(format!("failed to build HTTP client: {e}")).exit(),
     };
 
     let mut ticker = interval(Duration::from_secs(config.ship_interval_seconds));

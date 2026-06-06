@@ -1,0 +1,13 @@
+[agent]
+id = "prod-api-01"
+backend_url = "https://api.example.com/ingest"
+api_key = "your-api-key"
+
+[logs]
+paths = ["/var/log/syslog"]
+
+[metrics]
+collect_interval_seconds = 60
+
+[shipper]
+ship_interval_seconds = 30

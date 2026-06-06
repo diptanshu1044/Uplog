@@ -7,33 +7,24 @@ use crate::models::Config;
 const LOCAL_CONFIG: &str = "./uplog.toml";
 const SYSTEM_CONFIG: &str = "/etc/uplog/uplog.toml";
 
-pub fn load(cli_path: Option<&str>) -> Config {
-    let path = match resolve_config_path(cli_path) {
-        Some(p) => p,
-        None => AppError::exit(&AppError::ConfigNotFound),
-    };
+pub fn load(cli_path: Option<&str>) -> Result<Config, AppError> {
+    let path = resolve_config_path(cli_path).ok_or(AppError::ConfigNotFound)?;
 
-    let contents = match fs::read_to_string(&path) {
-        Ok(c) => c,
-        Err(e) => AppError::exit(&AppError::ConfigParseError(format!(
+    let contents = fs::read_to_string(&path).map_err(|e| {
+        AppError::ConfigParseError(format!(
             "failed to read {}: {e}",
             path.display()
-        ))),
-    };
+        ))
+    })?;
 
-    let config = match toml::from_str(&contents) {
-        Ok(c) => c,
-        Err(e) => AppError::exit(&AppError::ConfigParseError(e.to_string())),
-    };
+    let mut config: Config = toml::from_str(&contents)
+        .map_err(|e| AppError::ConfigParseError(e.to_string()))?;
 
-    if let Err(e) = validate(&config) {
-        AppError::exit(&e);
-    }
+    validate(&config)?;
 
-    let mut config = config;
     config.shipper.endpoint = config.agent.backend_url.clone();
 
-    config
+    Ok(config)
 }
 
 fn resolve_config_path(cli_path: Option<&str>) -> Option<PathBuf> {
@@ -49,9 +40,9 @@ fn resolve_config_path(cli_path: Option<&str>) -> Option<PathBuf> {
 }
 
 fn validate(config: &Config) -> Result<(), AppError> {
-    if config.agent.id.is_empty() {
+    if config.agent.id.trim().is_empty() {
         return Err(AppError::ConfigValidationError(
-            "agent.id must not be empty".into(),
+            "agent.id cannot be empty".to_string(),
         ));
     }
 

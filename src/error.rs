@@ -46,7 +46,12 @@ impl fmt::Display for AppError {
 impl std::error::Error for AppError {}
 
 impl AppError {
-    pub fn exit(e: &AppError) -> ! {
+    pub fn exit(self) -> ! {
+        eprintln!("{self}");
+        process::exit(1);
+    }
+
+    pub fn exit_ref(e: &AppError) -> ! {
         eprintln!("{e}");
         process::exit(1);
     }
