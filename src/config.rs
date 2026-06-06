@@ -30,6 +30,9 @@ pub fn load(cli_path: Option<&str>) -> Config {
         AppError::exit(&e);
     }
 
+    let mut config = config;
+    config.shipper.endpoint = config.agent.backend_url.clone();
+
     config
 }
 
