@@ -30,9 +30,10 @@ pub struct MetricsConfig {
 
 #[derive(Debug, Deserialize, Clone)]
 pub struct ShipperConfig {
-    pub ship_interval_seconds: u64,
     #[serde(skip, default)]
     pub endpoint: String,
+    pub ship_interval_seconds: u64,
+    pub api_key: Option<String>,
 }
 
 // ─── Log ──────────────────────────────────────────────────────────────────────

@@ -59,13 +59,16 @@ pub async fn run(config: ShipperConfig, buffer: Buffer, agent_id: String) -> ! {
 
         // MVP: failed batches are dropped. No disk persistence or retry queue
         // until v1.1. If the backend is down, data is lost for that interval.
-        let response = match client
+        let mut req = client
             .post(&config.endpoint)
             .header("Content-Type", "application/json")
-            .body(json_string)
-            .send()
-            .await
-        {
+            .body(json_string);
+
+        if let Some(key) = &config.api_key {
+            req = req.header("Authorization", format!("Bearer {}", key));
+        }
+
+        let response = match req.send().await {
             Ok(r) => r,
             Err(e) => {
                 AppError::warn(&AppError::ShipError(format!(
