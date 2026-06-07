@@ -82,7 +82,7 @@ async fn run_start(cli_config_path: Option<&str>) {
 
     tokio::spawn(shipper::run(config.shipper.clone(), buffer.clone(), agent_id));
 
-    futures::future::pending::<()>().await
+    std::future::pending::<()>().await
 }
 
 // ─── check ──────────────────────────────────────────────────────────────────
